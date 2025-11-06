@@ -155,6 +155,29 @@ const countryCoordinates = {
   ]
 };
 
+const countryLanguages = {
+  "CN": "zh-CN",
+  "US": "en-US",
+  "GB": "en-GB",
+  "JP": "ja",
+  "DE": "de",
+  "FR": "fr",
+  "CA": "en-CA",
+  "AU": "en-AU",
+  "IT": "it",
+  "ES": "es",
+  "KR": "ko",
+  "BR": "pt-BR",
+  "MX": "es-MX",
+  "IN": "en-IN",
+  "RU": "ru",
+  "NL": "nl",
+  "SE": "sv",
+  "CH": "de-CH",
+  "SG": "en-SG",
+  "TH": "th"
+};
+
 // 获取随机位置
 function getRandomLocationInCountry(country) {
   const coords = countryCoordinates[country] || countryCoordinates["US"];
@@ -187,7 +210,7 @@ function isDetailedAddress(data) {
   return Boolean(hasStreet && hasCity && hasHouseNumber);
 }
 
-async function fetchAddressFromOSM(lat, lon, maxAttempts = 8) {
+async function fetchAddressFromOSM(lat, lon, language, maxAttempts = 6) {
   let lastResult = null;
   let bestResultWithNumber = null;
 
@@ -201,13 +224,19 @@ async function fetchAddressFromOSM(lat, lon, maxAttempts = 8) {
         zoom: '18',
         addressdetails: '1'
       });
+      if (language) {
+        params.set('accept-language', language);
+      }
       const url = `${NOMINATIM_API}?${params.toString()}`;
 
-      const response = await fetch(url, {
-        headers: {
-          'User-Agent': 'AddressAutofillExtension/3.0 (Browser Extension)'
-        }
-      });
+      const headers = {
+        'User-Agent': 'AddressAutofillExtension/3.0 (Browser Extension)'
+      };
+      if (language) {
+        headers['Accept-Language'] = language;
+      }
+
+      const response = await fetch(url, { headers });
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -233,18 +262,24 @@ async function fetchAddressFromOSM(lat, lon, maxAttempts = 8) {
       lat += (Math.random() - 0.5) * 0.006;
       lon += (Math.random() - 0.5) * 0.006;
 
-      // 避免触发API速率限制
-      await sleep(500 + i * 250);
+      if (bestResultWithNumber && i >= 2) {
+        break;
+      }
+
+      if (i < maxAttempts - 1) {
+        const delay = 400 + i * 200;
+        await sleep(delay);
+      }
 
     } catch (error) {
       console.error(`OSM API尝试 ${i + 1} 失败:`, error);
       if (i < maxAttempts - 1) {
-        await sleep(600 + i * 300);
+        await sleep(500 + i * 250);
       }
     }
   }
 
-  return bestResultWithNumber || null;
+  return bestResultWithNumber || lastResult;
 }
 
 // 从randomuser.me获取用户信息
@@ -272,11 +307,80 @@ async function fetchUserInfo() {
   return null;
 }
 
+function sanitizeName(value, language) {
+  if (!value) return '';
+  const parts = value
+    .split(/[;/]/)
+    .map(part => part.trim())
+    .filter(Boolean);
+
+  if (!parts.length) {
+    return '';
+  }
+
+  const normalizedLang = (language || '').toLowerCase();
+  const primaryLang = normalizedLang.split('-')[0];
+
+  const scriptMatchers = [
+    { langs: ['zh', 'ja'], regex: /[\u4E00-\u9FFF]/ }, // CJK characters
+    { langs: ['ko'], regex: /[\uAC00-\uD7AF]/ },       // Hangul
+    { langs: ['ru'], regex: /[\u0400-\u04FF]/ },       // Cyrillic
+    { langs: ['th'], regex: /[\u0E00-\u0E7F]/ },       // Thai
+    { langs: ['hi'], regex: /[\u0900-\u097F]/ },       // Devanagari
+    { langs: ['ar'], regex: /[\u0600-\u06FF]/ }        // Arabic
+  ];
+
+  const matcher = scriptMatchers.find(({ langs }) => langs.includes(primaryLang));
+  if (matcher) {
+    const match = parts.find(part => matcher.regex.test(part));
+    if (match) return match;
+  }
+
+  const latinMatch = parts.find(part => /[A-Za-z]/.test(part));
+  if (latinMatch) {
+    return latinMatch;
+  }
+
+  return parts[0];
+}
+
+function pickLocalizedName(addr, keys, language) {
+  if (!addr) return '';
+
+  const normalizedLang = (language || '').toLowerCase();
+  const languageCandidates = [];
+
+  if (normalizedLang) {
+    languageCandidates.push(normalizedLang);
+    const primary = normalizedLang.split('-')[0];
+    if (primary && primary !== normalizedLang) {
+      languageCandidates.push(primary);
+    }
+  }
+
+  for (const key of keys) {
+    for (const lang of languageCandidates) {
+      const localizedKey = `${key}:${lang}`;
+      if (addr[localizedKey]) {
+        return sanitizeName(addr[localizedKey], language);
+      }
+    }
+  }
+
+  for (const key of keys) {
+    if (addr[key]) {
+      return sanitizeName(addr[key], language);
+    }
+  }
+
+  return '';
+}
+
 // 格式化地址
-function formatAddress(osmData, country) {
+function formatAddress(osmData, country, language) {
   const addr = osmData.address;
 
-  const streetOrArea = addr.road || addr.street || addr.neighbourhood || addr.suburb || '';
+  const streetOrArea = pickLocalizedName(addr, ['road', 'street', 'neighbourhood', 'suburb'], language);
   const houseIdentifier = extractHouseIdentifier(addr);
   let streetAddress = streetOrArea;
 
@@ -285,11 +389,12 @@ function formatAddress(osmData, country) {
   }
 
   if (!streetAddress) {
-    streetAddress = addr.village || addr.city || addr.town || '';
+    streetAddress = pickLocalizedName(addr, ['village', 'city', 'town'], language);
   }
 
-  const city = addr.city || addr.town || addr.village || '';
-  const state = addr.state || addr.province || addr.county || '';
+  const city = pickLocalizedName(addr, ['city', 'town', 'village', 'municipality', 'county'], language);
+  const state = pickLocalizedName(addr, ['state', 'province', 'region', 'state_district', 'county'], language);
+
   const postal = addr.postcode || '';
 
   return {
@@ -454,11 +559,12 @@ async function generateAddressFromAPI(countryCode, onProgress) {
 
     // 获取随机位置
     const location = getRandomLocationInCountry(countryCode);
+    const language = countryLanguages[countryCode] || 'en';
 
     const userInfoPromise = fetchUserInfo();
 
     // 从OSM获取地址
-    const osmData = await fetchAddressFromOSM(location.lat, location.lon ?? location.lng);
+    const osmData = await fetchAddressFromOSM(location.lat, location.lon ?? location.lng, language);
 
     if (!osmData) {
       throw new Error('无法获取真实地址，请重试');
@@ -471,7 +577,7 @@ async function generateAddressFromAPI(countryCode, onProgress) {
     const userInfo = await userInfoPromise;
 
     // 格式化地址
-    const addressData = formatAddress(osmData, countryCode);
+    const addressData = formatAddress(osmData, countryCode, language);
 
     // 格式化姓名
     const nameData = formatName(userInfo, countryCode);
