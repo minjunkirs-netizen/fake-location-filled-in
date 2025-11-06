@@ -1,0 +1,32 @@
+# Chrome Extension Development
+*.pem
+*.crx
+*.zip
+
+# IDE and Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Node modules (if added later)
+node_modules/
+
+# Temporary files
+.tmp/
+temp/
+.cache/
+
+# Claude working directory
+.claude/
+
+# OS files
+Thumbs.db

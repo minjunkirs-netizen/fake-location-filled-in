@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>图标生成器</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 40px 20px;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .container {
+      background: white;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+      text-align: center;
+      max-width: 500px;
+    }
+
+    h1 {
+      color: #667eea;
+      margin-bottom: 10px;
+    }
+
+    .subtitle {
+      color: #6b7280;
+      margin-bottom: 30px;
+      font-size: 14px;
+    }
+
+    .preview-area {
+      margin: 30px 0;
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      align-items: flex-end;
+    }
+
+    canvas {
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+    }
+
+    .canvas-label {
+      font-size: 12px;
+      color: #6b7280;
+      margin-top: 8px;
+    }
+
+    .download-btn {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      margin: 5px;
+      transition: transform 0.2s;
+    }
+
+    .download-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+
+    .download-btn:active {
+      transform: translateY(0);
+    }
+
+    .info {
+      background: #f0f9ff;
+      border-left: 4px solid #3b82f6;
+      padding: 16px;
+      margin-top: 30px;
+      border-radius: 4px;
+      text-align: left;
+    }
+
+    .info p {
+      margin: 8px 0;
+      color: #1e40af;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .info strong {
+      color: #1e3a8a;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎨 图标生成器</h1>
+    <p class="subtitle">为「智能地址填充助手」生成临时图标</p>
+
+    <div class="preview-area">
+      <div>
+        <canvas id="canvas16" width="16" height="16"></canvas>
+        <div class="canvas-label">16x16</div>
+      </div>
+      <div>
+        <canvas id="canvas48" width="48" height="48"></canvas>
+        <div class="canvas-label">48x48</div>
+      </div>
+      <div>
+        <canvas id="canvas128" width="128" height="128"></canvas>
+        <div class="canvas-label">128x128</div>
+      </div>
+    </div>
+
+    <div>
+      <button class="download-btn" onclick="downloadIcon(16)">下载 icon16.png</button>
+      <button class="download-btn" onclick="downloadIcon(48)">下载 icon48.png</button>
+      <button class="download-btn" onclick="downloadIcon(128)">下载 icon128.png</button>
+    </div>
+
+    <div class="info">
+      <p><strong>使用说明：</strong></p>
+      <p>1. 点击上方按钮下载三个图标文件</p>
+      <p>2. 将下载的文件放入扩展的 <code>icons/</code> 目录</p>
+      <p>3. 确保文件名正确：icon16.png、icon48.png、icon128.png</p>
+      <p>4. 在Chrome中加载扩展即可</p>
+    </div>
+  </div>
+
+  <script>
+    // 绘制图标
+    function drawIcon(canvas, size) {
+      const ctx = canvas.getContext('2d');
+
+      // 背景渐变
+      const gradient = ctx.createLinearGradient(0, 0, size, size);
+      gradient.addColorStop(0, '#667eea');
+      gradient.addColorStop(1, '#764ba2');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, size, size);
+
+      // 绘制地址图标（简化的信封/位置标记）
+      ctx.fillStyle = 'white';
+
+      if (size >= 64) {
+        // 大图标：绘制详细的位置标记
+        const centerX = size / 2;
+        const centerY = size / 2;
+        const pinSize = size * 0.6;
+
+        // 绘制位置标记
+        ctx.beginPath();
+        ctx.arc(centerX, centerY - pinSize * 0.15, pinSize * 0.35, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.moveTo(centerX, centerY + pinSize * 0.4);
+        ctx.lineTo(centerX - pinSize * 0.2, centerY);
+        ctx.arc(centerX, centerY, pinSize * 0.2, Math.PI, 0, false);
+        ctx.lineTo(centerX, centerY + pinSize * 0.4);
+        ctx.closePath();
+        ctx.fill();
+
+        // 绘制内圆（透明）
+        ctx.globalCompositeOperation = 'destination-out';
+        ctx.beginPath();
+        ctx.arc(centerX, centerY - pinSize * 0.15, pinSize * 0.15, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalCompositeOperation = 'source-over';
+
+      } else {
+        // 小图标：绘制简化的标记
+        const centerX = size / 2;
+        const centerY = size / 2;
+        const radius = size * 0.35;
+
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+        ctx.fill();
+
+        if (size >= 32) {
+          ctx.globalCompositeOperation = 'destination-out';
+          ctx.beginPath();
+          ctx.arc(centerX, centerY, radius * 0.4, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.globalCompositeOperation = 'source-over';
+        }
+      }
+    }
+
+    // 初始化绘制
+    drawIcon(document.getElementById('canvas16'), 16);
+    drawIcon(document.getElementById('canvas48'), 48);
+    drawIcon(document.getElementById('canvas128'), 128);
+
+    // 下载图标
+    function downloadIcon(size) {
+      const canvas = document.getElementById('canvas' + size);
+      const link = document.createElement('a');
+      link.download = 'icon' + size + '.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    }
+  </script>
+</body>
+</html>

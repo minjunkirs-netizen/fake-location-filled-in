@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>地址填充测试页面</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 40px 20px;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      background: white;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+      color: #667eea;
+      margin-bottom: 10px;
+      font-size: 28px;
+    }
+
+    .subtitle {
+      color: #6b7280;
+      margin-bottom: 30px;
+      font-size: 14px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #374151;
+      font-size: 14px;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 12px 16px;
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: all 0.3s;
+      font-family: inherit;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .submit-btn {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s;
+      margin-top: 10px;
+    }
+
+    .submit-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+
+    .submit-btn:active {
+      transform: translateY(0);
+    }
+
+    .tip {
+      background: #f0f9ff;
+      border-left: 4px solid #3b82f6;
+      padding: 16px;
+      margin-bottom: 30px;
+      border-radius: 4px;
+    }
+
+    .tip p {
+      margin: 0;
+      color: #1e40af;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .tip strong {
+      color: #1e3a8a;
+    }
+
+    @media (max-width: 640px) {
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+
+      .container {
+        padding: 30px 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📮 收货地址测试表单</h1>
+    <p class="subtitle">用于测试「智能地址填充助手」插件功能</p>
+
+    <div class="tip">
+      <p><strong>使用说明：</strong></p>
+      <p>1. 安装并启用「智能地址填充助手」插件</p>
+      <p>2. 点击浏览器工具栏的插件图标</p>
+      <p>3. 选择国家并生成随机地址</p>
+      <p>4. 点击「填充到当前页面」按钮</p>
+      <p>5. 观察下方表单是否自动填充</p>
+    </div>
+
+    <form id="address-form">
+      <div class="form-group">
+        <label for="name">收货人姓名 *</label>
+        <input type="text" id="name" name="name" placeholder="请输入姓名" required>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="phone">联系电话 *</label>
+          <input type="tel" id="phone" name="phone" placeholder="请输入手机号" required>
+        </div>
+
+        <div class="form-group">
+          <label for="postal">邮政编码</label>
+          <input type="text" id="postal" name="postal" placeholder="邮编">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="state">省份/州 *</label>
+          <input type="text" id="state" name="state" placeholder="请输入省份" required>
+        </div>
+
+        <div class="form-group">
+          <label for="city">城市 *</label>
+          <input type="text" id="city" name="city" placeholder="请输入城市" required>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="address">详细地址 *</label>
+        <textarea id="address" name="address" placeholder="街道、门牌号、小区、楼栋号等" required></textarea>
+      </div>
+
+      <button type="submit" class="submit-btn">提交订单</button>
+    </form>
+  </div>
+
+  <script>
+    // 表单提交处理
+    document.getElementById('address-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      const formData = new FormData(e.target);
+      const data = Object.fromEntries(formData);
+
+      console.log('表单数据:', data);
+
+      alert('表单提交成功！\n\n' +
+        '姓名: ' + data.name + '\n' +
+        '电话: ' + data.phone + '\n' +
+        '邮编: ' + data.postal + '\n' +
+        '省份: ' + data.state + '\n' +
+        '城市: ' + data.city + '\n' +
+        '地址: ' + data.address
+      );
+    });
+
+    // 监听输入变化（用于调试）
+    document.querySelectorAll('input, textarea').forEach(input => {
+      input.addEventListener('input', (e) => {
+        console.log(`字段 ${e.target.name} 的值已更新为:`, e.target.value);
+      });
+    });
+  </script>
+</body>
+</html>

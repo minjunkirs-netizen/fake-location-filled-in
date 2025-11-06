@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>智能地址填充助手</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <h1>🌐 地址填充助手</h1>
+
+    <div class="section">
+      <label for="country-select">选择国家：</label>
+      <select id="country-select">
+        <option value="CN">中国 (China)</option>
+        <option value="US">美国 (United States)</option>
+        <option value="GB">英国 (United Kingdom)</option>
+        <option value="JP">日本 (Japan)</option>
+        <option value="DE">德国 (Germany)</option>
+        <option value="FR">法国 (France)</option>
+        <option value="CA">加拿大 (Canada)</option>
+        <option value="AU">澳大利亚 (Australia)</option>
+        <option value="IT">意大利 (Italy)</option>
+        <option value="ES">西班牙 (Spain)</option>
+        <option value="KR">韩国 (South Korea)</option>
+        <option value="BR">巴西 (Brazil)</option>
+        <option value="MX">墨西哥 (Mexico)</option>
+        <option value="IN">印度 (India)</option>
+        <option value="RU">俄罗斯 (Russia)</option>
+        <option value="NL">荷兰 (Netherlands)</option>
+        <option value="SE">瑞典 (Sweden)</option>
+        <option value="CH">瑞士 (Switzerland)</option>
+        <option value="SG">新加坡 (Singapore)</option>
+        <option value="TH">泰国 (Thailand)</option>
+      </select>
+    </div>
+
+    <div class="section">
+      <button id="generate-btn" class="btn btn-primary">生成随机地址</button>
+    </div>
+
+    <!-- 进度提示 -->
+    <div id="progress-message" class="progress-message" style="display: none;"></div>
+
+    <div id="address-display" class="address-display" style="display: none;">
+      <h3>生成的地址信息：</h3>
+      <div class="address-info">
+        <div class="info-item">
+          <span class="label">姓名：</span>
+          <span id="name" class="value"></span>
+        </div>
+        <div class="info-item">
+          <span class="label">Email：</span>
+          <span id="email" class="value"></span>
+        </div>
+        <div class="info-item">
+          <span class="label">电话：</span>
+          <span id="phone" class="value"></span>
+        </div>
+        <div class="info-item">
+          <span class="label">邮编：</span>
+          <span id="postal" class="value"></span>
+        </div>
+        <div class="info-item">
+          <span class="label">省/州：</span>
+          <span id="state" class="value"></span>
+        </div>
+        <div class="info-item">
+          <span class="label">城市：</span>
+          <span id="city" class="value"></span>
+        </div>
+        <div class="info-item">
+          <span class="label">详细地址：</span>
+          <span id="address" class="value"></span>
+        </div>
+      </div>
+
+      <div class="action-buttons">
+        <button id="fill-btn" class="btn btn-success">填充到当前页面</button>
+        <button id="copy-btn" class="btn btn-secondary">复制地址</button>
+        <button id="save-btn" class="btn btn-secondary">保存到历史</button>
+      </div>
+    </div>
+
+    <!-- 历史记录 -->
+    <div class="section">
+      <button id="toggle-history-btn" class="btn-link">
+        <span id="history-toggle-icon">▶</span> 地址历史 (<span id="history-count">0</span>)
+      </button>
+    </div>
+
+    <div id="history-panel" class="history-panel" style="display: none;">
+      <div class="history-header">
+        <h3>保存的地址</h3>
+        <button id="clear-history-btn" class="btn-clear">清空</button>
+      </div>
+      <div id="history-list" class="history-list">
+        <p class="empty-message">暂无保存的地址</p>
+      </div>
+    </div>
+
+    <div class="footer">
+      <small>使用真实API生成地址 | 点击"生成随机地址"后，再点击"填充到当前页面"即可自动填充表单</small>
+    </div>
+  </div>
+
+  <script src="apiAddressGenerator.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>
